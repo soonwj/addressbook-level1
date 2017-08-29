@@ -64,6 +64,7 @@ public class AddressBook {
     private static final String MESSAGE_COMMAND_HELP_PARAMETERS = "\tParameters: %1$s";
     private static final String MESSAGE_COMMAND_HELP_EXAMPLE = "\tExample: %1$s";
     private static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted Person: %1$s";
+    private static final String MESSAGE_SORT_SUCCESS = "Address book sorted by %1$s";
     private static final String MESSAGE_DISPLAY_PERSON_DATA = "%1$s  Phone Number: %2$s  Email: %3$s";
     private static final String MESSAGE_DISPLAY_LIST_ELEMENT_INDEX = "%1$d. ";
     private static final String MESSAGE_GOODBYE = "Exiting Address Book... Good bye!";
@@ -117,6 +118,11 @@ public class AddressBook {
     private static final String COMMAND_CLEAR_WORD = "clear";
     private static final String COMMAND_CLEAR_DESC = "Clears address book permanently.";
     private static final String COMMAND_CLEAR_EXAMPLE = COMMAND_CLEAR_WORD;
+
+    private static final String COMMAND_SORT_WORD = "sort";
+    private static final String COMMAND_SORT_DESC = "Sorts the address book by name, number or email";
+    private static final String COMMAND_SORT_PARAMETER = "name OR number OR email";
+    private static final String COMMAND_SORT_EXAMPLE = COMMAND_SORT_WORD + " name" + LS + "\t\t\t " + COMMAND_SORT_WORD + " number" + LS + "\t\t\t " + COMMAND_SORT_WORD + " email";
 
     private static final String COMMAND_HELP_WORD = "help";
     private static final String COMMAND_HELP_DESC = "Shows program usage instructions.";
@@ -235,6 +241,7 @@ public class AddressBook {
      * ====================================================================
      */
 
+    //Converts a String array into a HashMap
     private static HashMap<String, String> stringArrToHashMap(String[] strArr) {
         HashMap<String, String> strHashMap = new HashMap<>();
 
@@ -245,6 +252,7 @@ public class AddressBook {
         return strHashMap;
     }
 
+    //Converts a HashMap into a String array
     private static String[] hashMapToStringArr(HashMap<String, String> hashMap) {
         String[] strArr = new String[3];
 
@@ -396,6 +404,8 @@ public class AddressBook {
             return executeDeletePerson(commandArgs);
         case COMMAND_CLEAR_WORD:
             return executeClearAddressBook();
+        case COMMAND_SORT_WORD:
+            return executeSortAddressBook(commandArgs);
         case COMMAND_HELP_WORD:
             return getUsageInfoForAllCommands();
         case COMMAND_EXIT_WORD:
@@ -586,6 +596,76 @@ public class AddressBook {
     }
 
     /**
+     * Sorts all persons in the address book, either by name, number or email.
+     *
+     * @return feedback display message for the operation result
+     */
+    private static String executeSortAddressBook(String sortingParam) {
+        if(sortingParam.compareTo("name") == 0) mergeSort(ALL_PERSONS, "name");
+        else if(sortingParam.compareTo("number") == 0) mergeSort(ALL_PERSONS, "phone");
+        else if(sortingParam.compareTo("email") == 0) mergeSort(ALL_PERSONS, "email");
+        else return getMessageForInvalidCommandInput(COMMAND_SORT_WORD, getUsageInfoForSortCommand());
+
+        return getMessageForSuccessfulSort(sortingParam);
+    }
+
+    /**
+     * Performs mergeSort on ALL_PERSONS based on parameter given
+     *
+     * @see #executeSortAddressBook(String)
+     * @param  type: sorting to be done by type
+     */
+    private static void mergeSort(ArrayList<HashMap<String, String>> arr, String type) {
+        int length = arr.size(); 	//Length of array given
+
+        if(length != 1) {
+            ArrayList<HashMap<String, String>> firstHalfArr = new ArrayList<>();	//The first half of the array
+            ArrayList<HashMap<String, String>> secondHalfArr = new ArrayList<>();	//The second half of the array
+
+            //Assigns the array into two halves.
+            for(int i = 0; i < length - length / 2; i++) {
+                if(i < length / 2) firstHalfArr.add(arr.get(i));
+                secondHalfArr.add(arr.get(i+length/2));
+            }
+
+            //Sorts both halves recursively
+            mergeSort(firstHalfArr, type);
+            mergeSort(secondHalfArr, type);
+
+            //Merges both halves after sorting
+            merge(arr, firstHalfArr, secondHalfArr, length, type);
+        }
+    }
+
+    /**
+     * Merges two sorted halfArrays back into the original arr according to the requirements of the sort
+     * @see #mergeSort(ArrayList, String)
+     */
+    private static void merge(ArrayList<HashMap<String, String>> arr, ArrayList<HashMap<String, String>> firstHalfArr, ArrayList<HashMap<String, String>> secondHalfArr, int length, String type) {
+        int firstHalfIndex = 0;		//Stores the index for firstHalfArr
+        int secondHalfIndex = 0;	//Stores the index for secondHalfArr
+
+        //Sorts arr by comparing the smallest value of both halfArrays
+        for(int i = 0; i < length; i++) {
+            if(secondHalfIndex >= length - length / 2 || (firstHalfIndex < length / 2 && firstHalfArr.get(firstHalfIndex).get(type).compareTo(secondHalfArr.get(secondHalfIndex).get(type)) <= 0)) {
+                arr.set(i, firstHalfArr.get(firstHalfIndex++));
+            }
+            else arr.set(i, secondHalfArr.get(secondHalfIndex++));
+        }
+    }
+
+    /**
+     * Constructs a feedback message for a successful sort command execution.
+     *
+     * @see #executeSortAddressBook(String)
+     * @param  sortingParam: successfully sorted by sortingParam
+     * @return successful sorted feedback message
+     */
+    private static String getMessageForSuccessfulSort(String sortingParam) {
+        return String.format(MESSAGE_SORT_SUCCESS, sortingParam);
+    }
+
+    /**
      * Clears all persons in the address book.
      *
      * @return feedback display message for the operation result
@@ -742,7 +822,6 @@ public class AddressBook {
      * @return the actual person object in the last shown person listing
      */
     private static String[] getPersonByLastVisibleIndex(int lastVisibleIndex) {
-        String[] person = new String[PERSON_DATA_COUNT];
         HashMap<String, String> personHM = latestPersonListingView.get(lastVisibleIndex - DISPLAYED_INDEX_OFFSET);
 
         return hashMapToStringArr(personHM);
@@ -1146,6 +1225,7 @@ public class AddressBook {
                 + getUsageInfoForFindCommand() + LS
                 + getUsageInfoForViewCommand() + LS
                 + getUsageInfoForDeleteCommand() + LS
+                + getUsageInfoForSortCommand() + LS
                 + getUsageInfoForClearCommand() + LS
                 + getUsageInfoForExitCommand() + LS
                 + getUsageInfoForHelpCommand();
@@ -1172,6 +1252,12 @@ public class AddressBook {
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_DELETE_EXAMPLE) + LS;
     }
 
+    /** Returns the string for showing 'sort' command usage instruction */
+    private static String getUsageInfoForSortCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_SORT_WORD, COMMAND_SORT_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_SORT_PARAMETER) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_SORT_EXAMPLE) + LS;
+    }
     /** Returns string for showing 'clear' command usage instruction */
     private static String getUsageInfoForClearCommand() {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_CLEAR_WORD, COMMAND_CLEAR_DESC) + LS
