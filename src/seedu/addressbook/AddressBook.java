@@ -625,7 +625,7 @@ public class AddressBook {
             //Assigns the array into two halves.
             for(int i = 0; i < length - length / 2; i++) {
                 if(i < length / 2) firstHalfArr.add(arr.get(i));
-                secondHalfArr.add(arr.get(i+length/2));
+                secondHalfArr.add(arr.get(i + length / 2));
             }
 
             //Sorts both halves recursively
@@ -641,13 +641,15 @@ public class AddressBook {
      * Merges two sorted halfArrays back into the original arr according to the requirements of the sort
      * @see #mergeSort(ArrayList, String)
      */
-    private static void merge(ArrayList<HashMap<String, String>> arr, ArrayList<HashMap<String, String>> firstHalfArr, ArrayList<HashMap<String, String>> secondHalfArr, int length, String type) {
+    private static void merge(ArrayList<HashMap<String, String>> arr, ArrayList<HashMap<String, String>> firstHalfArr,
+                              ArrayList<HashMap<String, String>> secondHalfArr, int length, String type) {
         int firstHalfIndex = 0;		//Stores the index for firstHalfArr
         int secondHalfIndex = 0;	//Stores the index for secondHalfArr
 
         //Sorts arr by comparing the smallest value of both halfArrays
         for(int i = 0; i < length; i++) {
-            if(secondHalfIndex >= length - length / 2 || (firstHalfIndex < length / 2 && firstHalfArr.get(firstHalfIndex).get(type).compareTo(secondHalfArr.get(secondHalfIndex).get(type)) <= 0)) {
+            if(secondHalfIndex >= length - length / 2 || (firstHalfIndex < length / 2
+                    && firstHalfArr.get(firstHalfIndex).get(type).compareTo(secondHalfArr.get(secondHalfIndex).get(type)) <= 0)) {
                 arr.set(i, firstHalfArr.get(firstHalfIndex++));
             }
             else arr.set(i, secondHalfArr.get(secondHalfIndex++));
