@@ -66,6 +66,12 @@
 || 	Parameters: INDEX
 || 	Example: delete 1
 || 
+|| sort: Sorts the address book by name, number or email
+||      Parameters: name OR number OR email
+||      Example: sort name
+||                       sort number
+||                       sort email
+|| 
 || clear: Clears address book permanently.
 || 	Example: clear
 || 
