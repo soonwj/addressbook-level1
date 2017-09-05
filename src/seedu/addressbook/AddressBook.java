@@ -153,6 +153,7 @@ public class AddressBook {
     private static final int PERSON_DATA_INDEX_PHONE = 1;
     private static final int PERSON_DATA_INDEX_EMAIL = 2;
 
+    private enum PersonProperty {NAME, PHONE, EMAIL};
     /**
      * The number of data elements for a single person.
      */
@@ -189,14 +190,14 @@ public class AddressBook {
     /**
      * List of all persons in the address book.
      */
-    private static final ArrayList<HashMap<String,String>> ALL_PERSONS = new ArrayList<>();
+    private static final ArrayList<HashMap<PersonProperty,String>> ALL_PERSONS = new ArrayList<>();
 
     /**
      * Stores the most recent list of persons shown to the user as a result of a user command.
      * This is a subset of the full list. Deleting persons in the pull list does not delete
      * those persons from this list.
      */
-    private static ArrayList<HashMap<String,String>> latestPersonListingView = getAllPersonsInAddressBook(); // initial view is of all
+    private static ArrayList<HashMap<PersonProperty,String>> latestPersonListingView = getAllPersonsInAddressBook(); // initial view is of all
 
     /**
      * The path to the file used for storing person data.
@@ -251,23 +252,23 @@ public class AddressBook {
      */
 
     //Converts a String array into a HashMap
-    private static HashMap<String, String> stringArrToHashMap(String[] strArr) {
-        HashMap<String, String> strHashMap = new HashMap<>();
+    private static HashMap<PersonProperty, String> stringArrToHashMap(String[] strArr) {
+        HashMap<PersonProperty, String> strHashMap = new HashMap<>();
 
-        strHashMap.put("name", strArr[PERSON_DATA_INDEX_NAME]);
-        strHashMap.put("phone", strArr[PERSON_DATA_INDEX_PHONE]);
-        strHashMap.put("email", strArr[PERSON_DATA_INDEX_EMAIL]);
+        strHashMap.put(PersonProperty.NAME, strArr[PERSON_DATA_INDEX_NAME]);
+        strHashMap.put(PersonProperty.PHONE, strArr[PERSON_DATA_INDEX_PHONE]);
+        strHashMap.put(PersonProperty.EMAIL, strArr[PERSON_DATA_INDEX_EMAIL]);
 
         return strHashMap;
     }
 
     //Converts a HashMap into a String array
-    private static String[] hashMapToStringArr(HashMap<String, String> hashMap) {
+    private static String[] hashMapToStringArr(HashMap<PersonProperty, String> hashMap) {
         String[] strArr = new String[3];
 
-        strArr[PERSON_DATA_INDEX_NAME] = hashMap.get("name");
-        strArr[PERSON_DATA_INDEX_PHONE] = hashMap.get("phone");
-        strArr[PERSON_DATA_INDEX_EMAIL] = hashMap.get("email");
+        strArr[PERSON_DATA_INDEX_NAME] = hashMap.get(PersonProperty.NAME);
+        strArr[PERSON_DATA_INDEX_PHONE] = hashMap.get(PersonProperty.PHONE);
+        strArr[PERSON_DATA_INDEX_EMAIL] = hashMap.get(PersonProperty.EMAIL);
 
         return strArr;
     }
@@ -378,7 +379,7 @@ public class AddressBook {
      */
     private static void loadDataFromStorage() {
         ArrayList<String[]> loadedData = loadPersonsFromFile(storageFilePath);
-        ArrayList<HashMap<String, String>> dataSet = new ArrayList<>();
+        ArrayList<HashMap<PersonProperty, String>> dataSet = new ArrayList<>();
 
         for(String[] d : loadedData) dataSet.add(stringArrToHashMap(d));
 
@@ -488,7 +489,7 @@ public class AddressBook {
     private static String executeFindPersons(String commandArgs) {
         final Set<String> keywords = extractKeywordsFromFindPersonArgs(commandArgs);
         final ArrayList<String[]> personsFound = getPersonsWithNameContainingAnyKeyword(keywords);
-        ArrayList<HashMap<String, String>> personsFoundHM = new ArrayList<>();
+        ArrayList<HashMap<PersonProperty, String>> personsFoundHM = new ArrayList<>();
 
         for(String[] p : personsFound) personsFoundHM.add(stringArrToHashMap(p));
 
@@ -525,10 +526,10 @@ public class AddressBook {
     private static ArrayList<String[]> getPersonsWithNameContainingAnyKeyword(Collection<String> keywords) {
         final ArrayList<String[]> matchedPersons = new ArrayList<>();
 
-        ArrayList<HashMap<String, String>> allPersons = getAllPersonsInAddressBook();
+        ArrayList<HashMap<PersonProperty, String>> allPersons = getAllPersonsInAddressBook();
         ArrayList<String[]> personsAL = new ArrayList<>();
 
-        for(HashMap<String, String> p : allPersons) personsAL.add(hashMapToStringArr(p));
+        for(HashMap<PersonProperty, String> p : allPersons) personsAL.add(hashMapToStringArr(p));
 
         for (String[] person : personsAL) {
             final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getNameFromPerson(person)));
@@ -610,9 +611,9 @@ public class AddressBook {
      * @return feedback display message for the operation result
      */
     private static String executeSortAddressBook(String sortingParam) {
-        if(sortingParam.compareTo("name") == 0) mergeSort(ALL_PERSONS, "name");
-        else if(sortingParam.compareTo("number") == 0) mergeSort(ALL_PERSONS, "phone");
-        else if(sortingParam.compareTo("email") == 0) mergeSort(ALL_PERSONS, "email");
+        if(sortingParam.compareTo("name") == 0) mergeSort(ALL_PERSONS, PersonProperty.NAME);
+        else if(sortingParam.compareTo("number") == 0) mergeSort(ALL_PERSONS, PersonProperty.PHONE);
+        else if(sortingParam.compareTo("email") == 0) mergeSort(ALL_PERSONS, PersonProperty.EMAIL);
         else return getMessageForInvalidCommandInput(COMMAND_SORT_WORD, getUsageInfoForSortCommand());
 
         return getMessageForSuccessfulSort(sortingParam);
@@ -624,12 +625,12 @@ public class AddressBook {
      * @see #executeSortAddressBook(String)
      * @param  type: sorting to be done by type
      */
-    private static void mergeSort(ArrayList<HashMap<String, String>> arr, String type) {
+    private static void mergeSort(ArrayList<HashMap<PersonProperty, String>> arr, PersonProperty type) {
         int length = arr.size(); 	//Length of array given
 
         if(length != 1) {
-            ArrayList<HashMap<String, String>> firstHalfArr = new ArrayList<>();	//The first half of the array
-            ArrayList<HashMap<String, String>> secondHalfArr = new ArrayList<>();	//The second half of the array
+            ArrayList<HashMap<PersonProperty, String>> firstHalfArr = new ArrayList<>();	//The first half of the array
+            ArrayList<HashMap<PersonProperty, String>> secondHalfArr = new ArrayList<>();	//The second half of the array
 
             //Assigns the array into two halves.
             for(int i = 0; i < length - length / 2; i++) {
@@ -648,10 +649,10 @@ public class AddressBook {
 
     /**
      * Merges two sorted halfArrays back into the original arr according to the requirements of the sort
-     * @see #mergeSort(ArrayList, String)
+     * @see #mergeSort(ArrayList, PersonProperty)
      */
-    private static void merge(ArrayList<HashMap<String, String>> arr, ArrayList<HashMap<String, String>> firstHalfArr,
-                              ArrayList<HashMap<String, String>> secondHalfArr, int length, String type) {
+    private static void merge(ArrayList<HashMap<PersonProperty, String>> arr, ArrayList<HashMap<PersonProperty, String>> firstHalfArr,
+                              ArrayList<HashMap<PersonProperty, String>> secondHalfArr, int length, PersonProperty type) {
         int firstHalfIndex = 0;		//Stores the index for firstHalfArr
         int secondHalfIndex = 0;	//Stores the index for secondHalfArr
 
@@ -692,10 +693,10 @@ public class AddressBook {
      * @return feedback display message for the operation result
      */
     private static String executeListAllPersonsInAddressBook() {
-        ArrayList<HashMap<String, String>> allPersons = getAllPersonsInAddressBook();
+        ArrayList<HashMap<PersonProperty, String>> allPersons = getAllPersonsInAddressBook();
         ArrayList<String[]> personsAL = new ArrayList<>();
 
-        for(HashMap<String, String> p : allPersons) personsAL.add(hashMapToStringArr(p));
+        for(HashMap<PersonProperty, String> p : allPersons) personsAL.add(hashMapToStringArr(p));
 
         ArrayList<String[]> toBeDisplayed = personsAL;
         showToUser(allPersons);
@@ -771,7 +772,7 @@ public class AddressBook {
      * The list will be indexed, starting from 1.
      *
      */
-    private static void showToUser(ArrayList<HashMap<String, String>> persons) {
+    private static void showToUser(ArrayList<HashMap<PersonProperty, String>> persons) {
         String listAsString = getDisplayString(persons);
         showToUser(listAsString);
         updateLatestViewedPersonListing(persons);
@@ -780,10 +781,10 @@ public class AddressBook {
     /**
      * Returns the display string representation of the list of persons.
      */
-    private static String getDisplayString(ArrayList<HashMap<String, String>> persons) {
+    private static String getDisplayString(ArrayList<HashMap<PersonProperty, String>> persons) {
         final StringBuilder messageAccumulator = new StringBuilder();
         for (int i = 0; i < persons.size(); i++) {
-            final HashMap<String, String> person = persons.get(i);
+            final HashMap<PersonProperty, String> person = persons.get(i);
             String[] personStr = hashMapToStringArr(person);
 
             final int displayIndex = i + DISPLAYED_INDEX_OFFSET;
@@ -821,7 +822,7 @@ public class AddressBook {
      *
      * @param newListing the new listing of persons
      */
-    private static void updateLatestViewedPersonListing(ArrayList<HashMap<String, String>> newListing) {
+    private static void updateLatestViewedPersonListing(ArrayList<HashMap<PersonProperty, String>> newListing) {
         // clone to insulate from future changes to arg list
         latestPersonListingView = new ArrayList<>(newListing);
     }
@@ -833,7 +834,7 @@ public class AddressBook {
      * @return the actual person object in the last shown person listing
      */
     private static String[] getPersonByLastVisibleIndex(int lastVisibleIndex) {
-        HashMap<String, String> personHM = latestPersonListingView.get(lastVisibleIndex - DISPLAYED_INDEX_OFFSET);
+        HashMap<PersonProperty, String> personHM = latestPersonListingView.get(lastVisibleIndex - DISPLAYED_INDEX_OFFSET);
 
         return hashMapToStringArr(personHM);
     }
@@ -906,10 +907,10 @@ public class AddressBook {
      *
      * @param filePath file for saving
      */
-    private static void savePersonsToFile(ArrayList<HashMap<String,String>> persons, String filePath) {
+    private static void savePersonsToFile(ArrayList<HashMap<PersonProperty,String>> persons, String filePath) {
         ArrayList<String[]> personsAL = new ArrayList<>();
 
-        for(HashMap<String, String> p : persons) personsAL.add(hashMapToStringArr(p));
+        for(HashMap<PersonProperty, String> p : persons) personsAL.add(hashMapToStringArr(p));
 
         final ArrayList<String> linesToWrite = encodePersonsToStrings(personsAL);
         try {
@@ -954,7 +955,7 @@ public class AddressBook {
     /**
      * Returns all persons in the address book
      */
-    private static ArrayList<HashMap<String,String>> getAllPersonsInAddressBook() {
+    private static ArrayList<HashMap<PersonProperty,String>> getAllPersonsInAddressBook() {
         return ALL_PERSONS;
     }
 
@@ -971,7 +972,7 @@ public class AddressBook {
      *
      * @param persons list of persons to initialise the model with
      */
-    private static void initialiseAddressBookModel(ArrayList<HashMap<String, String>> persons) {
+    private static void initialiseAddressBookModel(ArrayList<HashMap<PersonProperty, String>> persons) {
         ALL_PERSONS.clear();
         ALL_PERSONS.addAll(persons);
     }
